@@ -1,7 +1,8 @@
 # Constitution del Proyecto
 ### Plataforma Digital de Freight Forwarding — Principios de Arquitectura e Ingeniería
 
-**Versión:** 1.0
+**Versión:** 1.1
+**Última actualización:** 2026-08-25 — v1.1 incorpora despliegue híbrido Cloud + On-Premise (Artículo X), app móvil mínima (Artículo XI), integración de hardware de dimensioning (Artículo XII) y Repack & Consolidation (Artículo XIII).
 **Alcance:** Aplica a todo el código, decisiones de diseño y procesos de este proyecto, para todos los módulos (Forwarding, WMS, Customs, CRM, Accounting) y para todo miembro del equipo, presente o futuro.
 
 **Propósito:** Este documento es la fuente de verdad de "cómo construimos" el sistema. A diferencia del `plan.md` (que dice *qué* y *cuándo*), esta constitution dice *cómo* y *por qué*, y sus reglas no se rompen sin un ADR (Architecture Decision Record) que lo justifique y sea aprobado por el Tech Lead.
@@ -43,6 +44,9 @@
 | Patrón de aplicación | CQRS (con o sin Event Sourcing según contexto) | Fijo |
 | Mensajería interna | Outbox Pattern + eventos de dominio | Fijo |
 | Acceso a datos | Dapper (micro-ORM, SQL explícito, solo en capa de infraestructura) | Fijo |
+| Frontend móvil | React Native (Expo) | Fijo |
+| Modelo de despliegue | Contenedores Docker; mismo artefacto para Cloud (SaaS multi-tenant) y On-Premise (single-tenant) | Fijo |
+| Integración de hardware | Adaptadores en `Infrastructure` (patrón Adapter) por dispositivo; sin SDKs de hardware en `Domain`/`Application` | Fijo |
 
 Cambiar cualquier fila de esta tabla requiere un **ADR** aprobado, no una decisión unilateral de un desarrollador en un sprint.
 
@@ -98,7 +102,38 @@ Dado que el sistema maneja datos de comercio exterior, aduanas y facturación:
 2. Todo pedido de cambio durante una fase en curso se documenta como **Change Request**, se estima aparte, y se prioriza para la fase actual o una siguiente — nunca se absorbe silenciosamente "porque es rápido", ya que eso es lo que erosiona presupuestos y cronogramas en proyectos con clientes sensibles al costo.
 3. La transparencia sobre el avance (demos cada 2 semanas) es una obligación del equipo, no una gentileza: es lo que sostiene la confianza del cliente en un proyecto de 18-22 meses.
 
-## Artículo X — Enmiendas
+## Artículo X — Modelo de Despliegue Híbrido (Cloud + On-Premise)
+
+1. El sistema se distribuye como un único conjunto de contenedores Docker (Artículo III); no existen dos versiones de código para Cloud y On-Premise, solo dos formas de desplegar el mismo artefacto.
+2. **Cloud**: despliegue SaaS multi-tenant, con aislamiento de datos por tenant (a nivel de esquema o base de datos, decisión que se fija por ADR al implementarse), para clientes que no quieren operar infraestructura propia.
+3. **On-Premise**: despliegue single-tenant en la infraestructura del cliente (servidor propio o su nube privada), vía Docker Compose como mínimo soportado, o Kubernetes si el cliente ya lo opera. No requiere conectividad permanente a servidores nuestros para operar.
+4. Ninguna capa de `Domain` o `Application` puede depender de un servicio propietario de un proveedor cloud específico (colas, storage, IAM). Toda dependencia de infraestructura externa se aísla detrás de una interfaz definida en `Application` e implementada en `Infrastructure` (mismo principio de capas del Artículo IV), de forma que pasar de Cloud a On-Premise, o cambiar de proveedor, sea un cambio de configuración/infraestructura, nunca de dominio.
+5. Justificación: clientes de freight forwarding suelen operar en zonas con conectividad poco confiable, o tienen políticas internas que exigen que los datos de aduanas/facturación vivan en su propia infraestructura. Soportar ambos modos sin mantener dos bases de código es lo que hace esto viable con el modelo de un solo desarrollador (`plan.md`, Sección 5).
+
+## Artículo XI — Aplicación Móvil
+
+1. La app móvil es un **cliente delgado**: consume los mismos Commands/Queries que expone `Application` a la SPA web (Artículo II). No implementa lógica de negocio propia ni duplica reglas de dominio.
+2. Alcance deliberadamente mínimo: consulta de estado/tracking de shipments, aprobaciones simples (cotizaciones, documentación), notificaciones, y captura de datos en el piso de operación (dimensioning, evidencia fotográfica de repack, escaneo de código de barra). Ampliar este alcance a un ERP móvil completo requiere un ADR.
+3. Tecnología: React Native (Expo), para reusar tipos y contratos de API con la SPA (TypeScript) y minimizar el costo de mantener un segundo frontend con un equipo de una persona.
+4. Las pantallas de captura en el piso de operación (dimensioning, recepción de mercancía) deben tolerar conectividad intermitente: encolan la operación localmente y sincronizan cuando hay señal; nunca bloquean al operario porque "no hay internet".
+
+## Artículo XII — Integración de Hardware (Dimensioning)
+
+1. Toda báscula o dimensionador (equipo que mide peso y volumen de una carga) se integra mediante un **adaptador** en `Infrastructure` que implementa una interfaz común (`IDimensioningDeviceAdapter`) definida en `Application`. `Domain` y `Application` no conocen protocolos de hardware (serial, USB, Bluetooth, SDK del fabricante).
+2. La captura automática por hardware y la captura manual llegan al sistema por el **mismo Command** (ej. `RecordPackageMeasurementCommand`). El origen del dato (dispositivo vs. manual) es un atributo, no un camino distinto que se salte las validaciones del dominio.
+3. La ausencia o falla de un dispositivo nunca bloquea la operación: la captura manual es el fallback por defecto y debe estar siempre disponible, sin excepción.
+4. Cada integración de un fabricante/dispositivo nuevo es un adaptador aislado y aditivo; no debe requerir modificar los adaptadores existentes (Open/Closed).
+
+## Artículo XIII — Repack & Consolidation
+
+1. `Package` (bulto/caja) es un **Aggregate** de primera clase dentro de `Warehousing`, no un campo suelto de `Shipment`.
+2. Una operación de repack/consolidación (combinar N paquetes origen en uno o más paquetes destino) es una operación de dominio atómica que debe preservar **trazabilidad completa**: el paquete resultante mantiene referencia a todos sus paquetes de origen, y estos quedan marcados como consolidados, nunca eliminados. Esta trazabilidad es un invariante de dominio, no un detalle de UI.
+3. El peso y las dimensiones del paquete resultante de un repack se **vuelven a capturar** (idealmente vía integración de dimensioning, Artículo XII), nunca se asumen sumando los paquetes de origen: consolidar reduce espacio muerto y cambia el peso volumétrico real, que es la base de la facturación de flete.
+4. Finance y Customs siguen referenciando los paquetes/shipments originales a través de la trazabilidad del punto 2, incluso después de un repack — ningún cargo ni documento aduanero puede "perderse" porque la mercancía cambió de caja físicamente.
+5. Toda operación de repack queda registrada en el audit log inmutable (Artículo VIII.3), incluyendo evidencia fotográfica antes/después cuando la captura se hace desde la app móvil.
+6. Justificación de negocio: Magaya no ofrece consolidación de paquetes con generación de un tercero manteniendo trazabilidad — es un diferenciador competitivo explícito de este proyecto (ver `plan.md`, Diferenciador clave).
+
+## Artículo XIV — Enmiendas
 
 Esta constitution puede modificarse, pero:
 - Cualquier cambio se propone por escrito.
