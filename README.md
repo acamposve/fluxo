@@ -1,6 +1,6 @@
 # Fluxo
 
-Plataforma digital de **Freight Forwarding** — , cubriendo los cinco pilares del negocio logístico: **Freight Forwarding, Warehouse Management (WMS), Customs (Aduanas), CRM y Accounting**.
+Plataforma digital de **Freight Forwarding**, cubriendo los cinco pilares del negocio logístico: **Freight Forwarding, Warehouse Management (WMS), Customs (Aduanas), CRM y Accounting**.
 
 Producto propio (white-label), sin licenciamiento de terceros ni costos recurrentes por usuario, construido con **Domain-Driven Design** y **CQRS** para modelar un dominio complejo y regulado en Bounded Contexts independientes.
 
@@ -48,6 +48,18 @@ Application     → depende solo de Domain (Commands, Queries, Handlers, interfa
 Infrastructure  → depende de Application y Domain (implementa interfaces: repos con Dapper, mensajería)
 API/Presentation→ depende de Application (controllers finos, sin lógica de negocio)
 ```
+
+## Desarrollo local
+
+Requiere .NET 10 SDK.
+
+```bash
+dotnet build Fluxo.slnx
+dotnet test tests/Fluxo.BuildingBlocks.Application.Tests/Fluxo.BuildingBlocks.Application.Tests.csproj
+dotnet run --project src/Host/Fluxo.Api/Fluxo.Api.csproj
+```
+
+Ver [`docs/architecture/`](docs/architecture/) para las convenciones (CQRS, acceso a datos, Outbox, despliegue) y [`docs/adr/`](docs/adr/) para las decisiones técnicas registradas.
 
 ## Calidad
 
