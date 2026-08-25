@@ -1,8 +1,8 @@
 # Constitution del Proyecto
 ### Plataforma Digital de Freight Forwarding — Principios de Arquitectura e Ingeniería
 
-**Versión:** 1.1
-**Última actualización:** 2026-08-25 — v1.1 incorpora despliegue híbrido Cloud + On-Premise (Artículo X), app móvil mínima (Artículo XI), integración de hardware de dimensioning (Artículo XII) y Repack & Consolidation (Artículo XIII).
+**Versión:** 1.2
+**Última actualización:** 2026-08-25 — v1.1 incorpora despliegue híbrido Cloud + On-Premise (Artículo X), app móvil mínima (Artículo XI), integración de hardware de dimensioning (Artículo XII) y Repack & Consolidation (Artículo XIII). v1.2 agrega la app de escritorio (Artículo XIV) para puestos fijos con hardware cableado.
 **Alcance:** Aplica a todo el código, decisiones de diseño y procesos de este proyecto, para todos los módulos (Forwarding, WMS, Customs, CRM, Accounting) y para todo miembro del equipo, presente o futuro.
 
 **Propósito:** Este documento es la fuente de verdad de "cómo construimos" el sistema. A diferencia del `plan.md` (que dice *qué* y *cuándo*), esta constitution dice *cómo* y *por qué*, y sus reglas no se rompen sin un ADR (Architecture Decision Record) que lo justifique y sea aprobado por el Tech Lead.
@@ -45,6 +45,7 @@
 | Mensajería interna | Outbox Pattern + eventos de dominio | Fijo |
 | Acceso a datos | Dapper (micro-ORM, SQL explícito, solo en capa de infraestructura) | Fijo |
 | Frontend móvil | React Native (Expo) | Fijo |
+| Frontend escritorio | Electron + React (empaqueta la SPA web) | Fijo |
 | Modelo de despliegue | Contenedores Docker; mismo artefacto para Cloud (SaaS multi-tenant) y On-Premise (single-tenant) | Fijo |
 | Integración de hardware | Adaptadores en `Infrastructure` (patrón Adapter) por dispositivo; sin SDKs de hardware en `Domain`/`Application` | Fijo |
 
@@ -133,7 +134,15 @@ Dado que el sistema maneja datos de comercio exterior, aduanas y facturación:
 5. Toda operación de repack queda registrada en el audit log inmutable (Artículo VIII.3), incluyendo evidencia fotográfica antes/después cuando la captura se hace desde la app móvil.
 6. Justificación de negocio: Magaya no ofrece consolidación de paquetes con generación de un tercero manteniendo trazabilidad — es un diferenciador competitivo explícito de este proyecto (ver `plan.md`, Diferenciador clave).
 
-## Artículo XIV — Enmiendas
+## Artículo XIV — Aplicación de Escritorio
+
+1. La app de escritorio es otro **cliente delgado**: empaqueta la misma SPA web mediante Electron y consume los mismos Commands/Queries de `Application`. No duplica lógica de negocio ni mantiene un modelo de datos propio.
+2. Su razón de ser es el acceso nativo que un navegador no da de forma confiable: puertos serial/USB para básculas y dimensionadores (Artículo XII), e impresión directa en impresoras térmicas de etiquetas y documentación (BL/AWB, código de barra).
+3. Se usa en puestos fijos de operación (recepción, empaque, dimensioning) donde el hardware está cableado a una PC — a diferencia de la app móvil (Artículo XI), que cubre el caso de operario o gestión sin atarse a un puesto fijo.
+4. Los adaptadores de hardware específicos de escritorio (drivers de báscula/dimensionador, drivers de impresión) viven en el proceso de Electron, nunca en el código de la SPA compartido con la web — así la SPA web sigue funcionando igual sin Electron cuando no hay hardware local que atender.
+5. Igual que la app móvil, debe tolerar operar sin conectividad hacia el backend y encolar localmente lo capturado hasta poder sincronizar.
+
+## Artículo XV — Enmiendas
 
 Esta constitution puede modificarse, pero:
 - Cualquier cambio se propone por escrito.
