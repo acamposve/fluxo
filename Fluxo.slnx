@@ -1,0 +1,20 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/BuildingBlocks/">
+    <Project Path="src/BuildingBlocks/Fluxo.BuildingBlocks.Application/Fluxo.BuildingBlocks.Application.csproj" />
+    <Project Path="src/BuildingBlocks/Fluxo.BuildingBlocks.Domain/Fluxo.BuildingBlocks.Domain.csproj" />
+    <Project Path="src/BuildingBlocks/Fluxo.BuildingBlocks.Infrastructure/Fluxo.BuildingBlocks.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Host/">
+    <Project Path="src/Host/Fluxo.Api/Fluxo.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/IdentityAccess/">
+    <Project Path="src/Modules/IdentityAccess/Fluxo.Modules.IdentityAccess.Application/Fluxo.Modules.IdentityAccess.Application.csproj" />
+    <Project Path="src/Modules/IdentityAccess/Fluxo.Modules.IdentityAccess.Domain/Fluxo.Modules.IdentityAccess.Domain.csproj" />
+    <Project Path="src/Modules/IdentityAccess/Fluxo.Modules.IdentityAccess.Infrastructure/Fluxo.Modules.IdentityAccess.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Fluxo.BuildingBlocks.Application.Tests/Fluxo.BuildingBlocks.Application.Tests.csproj" />
+  </Folder>
+</Solution>

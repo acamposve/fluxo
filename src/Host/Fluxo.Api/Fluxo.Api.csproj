@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Modules\IdentityAccess\Fluxo.Modules.IdentityAccess.Application\Fluxo.Modules.IdentityAccess.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\IdentityAccess\Fluxo.Modules.IdentityAccess.Infrastructure\Fluxo.Modules.IdentityAccess.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\BuildingBlocks\Fluxo.BuildingBlocks.Application\Fluxo.BuildingBlocks.Application.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>
