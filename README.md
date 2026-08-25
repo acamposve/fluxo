@@ -1,6 +1,6 @@
 # Fluxo
 
-Plataforma digital de **Freight Forwarding** — clon funcional de Magaya Digital Freight Platform, cubriendo los cinco pilares del negocio logístico: **Freight Forwarding, Warehouse Management (WMS), Customs (Aduanas), CRM y Accounting**.
+Plataforma digital de **Freight Forwarding** — , cubriendo los cinco pilares del negocio logístico: **Freight Forwarding, Warehouse Management (WMS), Customs (Aduanas), CRM y Accounting**.
 
 Producto propio (white-label), sin licenciamiento de terceros ni costos recurrentes por usuario, construido con **Domain-Driven Design** y **CQRS** para modelar un dominio complejo y regulado en Bounded Contexts independientes.
 
