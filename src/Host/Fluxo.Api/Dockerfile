@@ -4,7 +4,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY Fluxo.sln .
+COPY Fluxo.slnx .
 COPY src/BuildingBlocks/ src/BuildingBlocks/
 COPY src/Modules/ src/Modules/
 COPY src/Host/Fluxo.Api/ src/Host/Fluxo.Api/
