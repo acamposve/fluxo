@@ -63,7 +63,7 @@ API/Presentation→ depende de Application (controllers finos, sin lógica de ne
 
 ## Flujo de contribución
 
-La rama `main` está protegida: todo cambio se integra mediante **Pull Request**, sin excepción salvo para el propietario del repositorio.
+La rama `main` está protegida mediante un [Repository Ruleset](.github/rulesets/protect-main.json) de GitHub: todo cambio se integra mediante **Pull Request** (bloquea force-push y borrado de la rama), sin excepción salvo para el rol admin del repositorio (el propietario).
 
 ```bash
 git checkout -b feature/mi-cambio
